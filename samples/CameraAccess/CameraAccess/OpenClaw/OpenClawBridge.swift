@@ -109,13 +109,23 @@ class OpenClawBridge: ObservableObject {
       request.httpBody = try JSONSerialization.data(withJSONObject: body)
       let (data, response) = try await session.data(for: request)
       let httpResponse = response as? HTTPURLResponse
+      let statusCode = httpResponse?.statusCode ?? 0
+      let contentType = (httpResponse?.allHeaderFields["Content-Type"] as? String) ?? ""
 
-      guard let statusCode = httpResponse?.statusCode, (200...299).contains(statusCode) else {
-        let code = httpResponse?.statusCode ?? 0
+      // Check for "Method Not Allowed" (405) or HTML response (SPA fallback)
+      // Both indicate the API endpoint is likely disabled or invalid.
+      if statusCode == 405 || contentType.contains("text/html") {
+        let errorMsg = "OpenClaw API is disabled. Enable 'chatCompletions' in your OpenClaw config."
+        NSLog("[OpenClaw] Error: %@", errorMsg)
+        lastToolCallStatus = .failed(toolName, "API Disabled")
+        return .failure(errorMsg)
+      }
+
+      guard (200...299).contains(statusCode) else {
         let bodyStr = String(data: data, encoding: .utf8) ?? "no body"
-        NSLog("[OpenClaw] Chat failed: HTTP %d - %@", code, String(bodyStr.prefix(200)))
-        lastToolCallStatus = .failed(toolName, "HTTP \(code)")
-        return .failure("Agent returned HTTP \(code)")
+        NSLog("[OpenClaw] Chat failed: HTTP %d - %@", statusCode, String(bodyStr.prefix(200)))
+        lastToolCallStatus = .failed(toolName, "HTTP \(statusCode)")
+        return .failure("Agent returned HTTP \(statusCode)")
       }
 
       if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
