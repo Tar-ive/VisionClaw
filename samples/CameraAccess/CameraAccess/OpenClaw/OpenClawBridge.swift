@@ -36,7 +36,8 @@ class OpenClawBridge: ObservableObject {
       return
     }
     connectionState = .checking
-    guard let url = URL(string: "\(GeminiConfig.openClawHost):\(GeminiConfig.openClawPort)/v1/chat/completions") else {
+    let baseURL = GeminiConfig.openClawHost.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    guard let url = URL(string: "\(baseURL)/v1/chat/completions") else {
       connectionState = .unreachable("Invalid URL")
       return
     }
@@ -76,7 +77,8 @@ class OpenClawBridge: ObservableObject {
   ) async -> ToolResult {
     lastToolCallStatus = .executing(toolName)
 
-    guard let url = URL(string: "\(GeminiConfig.openClawHost):\(GeminiConfig.openClawPort)/v1/chat/completions") else {
+    let baseURL = GeminiConfig.openClawHost.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    guard let url = URL(string: "\(baseURL)/v1/chat/completions") else {
       lastToolCallStatus = .failed(toolName, "Invalid URL")
       return .failure("Invalid gateway URL")
     }

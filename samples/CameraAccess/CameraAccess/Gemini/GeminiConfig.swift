@@ -44,7 +44,6 @@ enum GeminiConfig {
   // Copy Secrets.example.swift -> Secrets.swift and fill in your values.
   static let apiKey = Secrets.geminiAPIKey
   static let openClawHost = Secrets.openClawHost
-  static let openClawPort = Secrets.openClawPort
   static let openClawHookToken = Secrets.openClawHookToken
   static let openClawGatewayToken = Secrets.openClawGatewayToken
 
